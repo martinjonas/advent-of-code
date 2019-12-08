@@ -1,19 +1,12 @@
 open Batteries
 open Printf
 
-let stack_two_ints i1 i2 = if i1 == 2 then i2 else i1
+let stack_two_layers = List.map2 (fun i1 i2 -> if i1 == 2 then i2 else i1)
 
-let stack_two_layers  = List.map2 stack_two_ints
-
-let split_each (n : int) (input : 'a list) :  'a list list =
-  List.fold_right (fun elem acc ->
-      match acc with
-      | [] -> [[elem]]
-      | (hacc :: tacc) ->
-           if List.length hacc == n
-           then [elem] :: hacc :: tacc
-           else (elem :: hacc) :: tacc
-    ) input []
+let rec split_each (n : int) (input : 'a list) :  'a list list =
+  match List.split_at n input with
+  | (l, []) -> [l]
+  | (l, r) -> l :: split_each n r
 
 let count_members x list = List.length (List.filter ((==) x) list)
 
@@ -24,8 +17,7 @@ let part1 layers =
 
 let solve (input : string) : unit =
   input
-  |> String.to_seq
-  |> List.of_seq
+  |> String.to_list
   |> List.map (fun ch -> int_of_char ch - int_of_char '0')
   |> split_each 150
   |> List.reduce stack_two_layers
