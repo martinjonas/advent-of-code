@@ -87,7 +87,7 @@ object (self)
     done
 end
 
-(* before this is the intcode interpreter *)
+(* all code above this is the intcode interpreter *)
 (* the actual solution is below*)
 
 let game = ref IntMap.empty
