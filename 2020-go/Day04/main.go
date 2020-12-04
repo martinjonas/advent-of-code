@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"strconv"
 )
@@ -29,12 +30,13 @@ func isNumberBetween(s string, min, max int) bool {
 	return min <= num && num <= max
 }
 
-// DISCLAIMER: I am really not proud about the following code…
-func isValid2(passport map[string]string) bool {
-	if !isValid1(passport) {
-		return false
-	}
+var (
+	hclRegex = regexp.MustCompile("^#[0-9a-f]{6}$")
+	eclRegex = regexp.MustCompile("^(amb|blu|brn|gry|grn|hzl|oth)$")
+	pidRegex = regexp.MustCompile("^[0-9]{9}$")
+)
 
+func isValidField(key, value string) bool {
 	// byr (Birth Year) - four digits; at least 1920 and at most 2002.
 	// iyr (Issue Year) - four digits; at least 2010 and at most 2020.
 	// eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
@@ -46,59 +48,47 @@ func isValid2(passport map[string]string) bool {
 	// pid (Passport ID) - a nine-digit number, including leading zeroes.
 	// cid (Country ID) - ignored, missing or not.
 
-	if !isNumberBetween(passport["byr"], 1920, 2002) ||
-		!isNumberBetween(passport["iyr"], 2010, 2020) ||
-		!isNumberBetween(passport["eyr"], 2020, 2030) {
-		return false
-	}
-
-	hgt := passport["hgt"]
-	if strings.HasSuffix(hgt, "cm") {
-		if !isNumberBetween(strings.TrimSuffix(hgt, "cm"), 150, 193) {
+	switch key {
+	case "byr":
+		return isNumberBetween(value, 1920, 2002)
+	case "iyr":
+		return isNumberBetween(value, 2010, 2020)
+	case "eyr":
+		return isNumberBetween(value, 2020, 2030)
+	case "hgt":
+		if strings.HasSuffix(value, "cm") {
+			return isNumberBetween(strings.TrimSuffix(value, "cm"), 150, 193)
+		} else if strings.HasSuffix(value, "in") {
+			return isNumberBetween(strings.TrimSuffix(value, "in"), 59, 76)
+		} else {
 			return false
 		}
-	} else if strings.HasSuffix(hgt, "in") {
-		if !isNumberBetween(strings.TrimSuffix(hgt, "in"), 59, 76) {
-			return false
-		}
-	} else {
-		return false
+	case "hcl":
+		return hclRegex.MatchString(value)
+	case "ecl":
+		return eclRegex.MatchString(value)
+	case "pid":
+		return pidRegex.MatchString(value)
+	case "cid":
+		return true
 	}
 
-	hcl := passport["hcl"]
-	if len(hcl) != 7 || hcl[0] != '#' {
-		return false
-	}
-
-	for _, r := range hcl[1:] {
-		if (r < '0' || r > '9') && (r < 'a' || r > 'f') {
-			return false
-		}
-	}
-
-	ecl := passport["ecl"]
-	if (ecl != "amb" && ecl != "blu" && ecl != "brn" && ecl != "gry" && ecl != "grn" && ecl != "hzl" && ecl != "oth") {
-		return false
-	}
-
-	pid := passport["pid"]
-	if len(pid) != 9 {
-		return false
-	}
-
-	for _, r := range pid {
-		if (r < '0' || r > '9'){
-			return false
-		}
-	}
-
-	return true
+	return false
 }
 
 func part2(passports [](map[string]string)) int {
 	valid := 0
 	for _, passport := range passports {
-		if isValid2(passport) {
+		if !isValid1(passport) {
+			continue
+		}
+
+		isValid := true
+		for k,v := range passport {
+			isValid = isValid && isValidField(k,v)
+		}
+
+		if isValid {
 			valid++
 		}
 	}
