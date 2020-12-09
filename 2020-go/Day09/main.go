@@ -38,22 +38,20 @@ func part1(numbers []int) int {
 func part2(numbers []int, sumTo int) int {
 	// naive algorithm, but the input was quite small…
 	for i := 0; i < len(numbers); i++ {
-		for j := i+1; j < len(numbers); j++ {
-			sum := 0
-			min := numbers[i]
-			max := numbers[i]
+		sum := 0
+		min := numbers[i]
+		max := numbers[i]
 
-			for _, x := range numbers[i:j] {
-				if x < min {
-					min = x
-				}
-
-				if x > max {
-					max = x
-				}
-
-				sum += x
+		for _, x := range numbers[i:] {
+			if x < min {
+				min = x
 			}
+
+			if x > max {
+				max = x
+			}
+
+			sum += x
 
 			if sumTo == sum {
 				return min + max
