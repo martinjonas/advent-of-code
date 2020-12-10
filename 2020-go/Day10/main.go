@@ -10,60 +10,28 @@ import (
 
 func part1(adapters []int) int {
 	current := 0
-	oneDifferences := 0
-	threeDifferences := 1
+	differences := [4]int{0,0,0,1}
 
 	for _, adapter := range adapters {
-		if adapter == current+1 {
-			oneDifferences += 1
-		}
-
-		if adapter == current+3 {
-			threeDifferences += 1
-		}
-
+		differences[adapter-current]++
 		current = adapter
 	}
 
-	return oneDifferences * threeDifferences
-}
-
-type IntPair struct {
-	fst, snd int
-}
-
-func countArrangements(adapters []int, current int, cache map[IntPair]int) int {
-	if len(adapters) == 0 {
-		return 0
-	}
-
-	first := adapters[0]
-
-	if first-current > 3 {
-		return 0
-	}
-
-	if len(adapters) == 1 {
-		return 1
-	}
-
-	key := IntPair{first, current}
-	res, seen := cache[key]
-	if seen {
-		return res
-	}
-
-	withFirst := countArrangements(adapters[1:], first, cache)
-	withoutFirst := countArrangements(adapters[1:], current, cache)
-	result := withFirst + withoutFirst
-
-	cache[key] = result
-	return result
+	return differences[1] * differences[3]
 }
 
 func part2(adapters []int) int {
-	cache := make(map[IntPair]int)
-	return countArrangements(adapters, 0, cache)
+	arrangements := make(map[int]int)
+	arrangements[0] = 1
+
+	for _, adapter := range adapters {
+		arrangements[adapter] =
+			arrangements[adapter-1] +
+			arrangements[adapter-2] +
+			arrangements[adapter-3]
+	}
+
+	return arrangements[adapters[len(adapters)-1]]
 }
 
 func main() {
