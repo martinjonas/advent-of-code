@@ -9,48 +9,38 @@ import (
 )
 
 func apply_mask(n int, mask map[int]bool) int {
-	res := n
 	for i, b := range mask {
 		if b {
-			res |= 1 << i
+			n |= 1 << i
 		} else {
-			res = res &^ (1 << i)
+			n = n &^ (1 << i)
 		}
 	}
-	return res
+	return n
 }
 
 func apply_decoder_mask(address int, mask map[int]bool) []int {
-	res := address
-
-	unknown_indices := make(map[int]int)
-	unknown := 0
+	var unknown_indices []int
+	new_mask := make(map[int]bool)
 
 	for i := 0; i < 36; i++ {
 		b, isSet := mask[i]
-		if isSet {
-			if b {
-				res |= 1 << i
-			}
-		} else {
-			unknown_indices[i] = unknown
-			unknown++
+		if b {
+			new_mask[i] = true
+		}
+		if !isSet {
+			unknown_indices = append(unknown_indices, i)
 		}
 	}
 
 	possible := []int{}
-	for v := 0; v < (1 << unknown); v++ {
-		to_add := res
-		for index, unknown_index := range unknown_indices {
+	for v := 0; v < (1 << len(unknown_indices)); v++ {
+		for  unknown_index, index := range unknown_indices {
 			unknown_value := (v >> unknown_index) % 2 == 1
+			new_mask[index] = unknown_value
 
-			if unknown_value {
-				to_add |= 1 << index
-			} else {
-				to_add = to_add &^ (1 << index)
-			}
 		}
-		possible = append(possible, to_add)
+		possible = append(possible, apply_mask(address, new_mask))
 	}
 
 	return possible
