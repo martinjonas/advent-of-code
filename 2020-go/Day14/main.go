@@ -19,7 +19,21 @@ func apply_mask(n int, mask map[int]bool) int {
 	return n
 }
 
-func apply_decoder_mask(address int, mask map[int]bool) []int {
+func apply_decoder_mask(address int, decoder_mask map[int]bool, unknown_indices []int) []int {
+	possible := []int{}
+	for v := 0; v < (1 << len(unknown_indices)); v++ {
+		for  unknown_index, index := range unknown_indices {
+			unknown_value := (v >> unknown_index) % 2 == 1
+			decoder_mask[index] = unknown_value
+
+		}
+		possible = append(possible, apply_mask(address, decoder_mask))
+	}
+
+	return possible
+}
+
+func get_decoder_mask(mask map[int]bool) (map[int]bool, []int) {
 	var unknown_indices []int
 	new_mask := make(map[int]bool)
 
@@ -32,18 +46,7 @@ func apply_decoder_mask(address int, mask map[int]bool) []int {
 			unknown_indices = append(unknown_indices, i)
 		}
 	}
-
-	possible := []int{}
-	for v := 0; v < (1 << len(unknown_indices)); v++ {
-		for  unknown_index, index := range unknown_indices {
-			unknown_value := (v >> unknown_index) % 2 == 1
-			new_mask[index] = unknown_value
-
-		}
-		possible = append(possible, apply_mask(address, new_mask))
-	}
-
-	return possible
+	return new_mask, unknown_indices
 }
 
 func sum_map_values(m map[int]int) int {
@@ -63,6 +66,8 @@ func main() {
 	memory := make(map[int]int)
 	memory2 := make(map[int]int)
 	mask := make(map[int]bool)
+	decoder_mask := make(map[int]bool)
+	var unknown_indices []int
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -74,6 +79,8 @@ func main() {
 					mask[35-i] = b == '1'
 				}
 			}
+
+			decoder_mask, unknown_indices = get_decoder_mask(mask)
 		} else {
 			parts := strings.Split(line[4:], "] = ")
 			index, _ := strconv.Atoi(parts[0])
@@ -81,7 +88,7 @@ func main() {
 
 			memory[index] = apply_mask(value, mask)
 
-			for _, address := range apply_decoder_mask(index, mask) {
+			for _, address := range apply_decoder_mask(index, decoder_mask, unknown_indices) {
 				memory2[address] = value
 			}
 		}
