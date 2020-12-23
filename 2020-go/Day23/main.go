@@ -1,102 +1,92 @@
 package main
 
 import (
-	"container/ring"
 	"fmt"
 	"io/ioutil"
 	"strconv"
 	"strings"
 )
 
-func doMoves(numbers *ring.Ring, moves int) *ring.Ring {
-	len := numbers.Len()
-
-	numberToNode := make(map[int]*ring.Ring)
-	for i := 0; i < len; i++ {
-		number := numbers.Value.(int)
-		numberToNode[number] = numbers
-		numbers = numbers.Next()
-	}
-
+func doMoves(current, max int, nextMap []int, moves int) []int {
 	for i := 0; i < moves; i++ {
-		c1 := numbers.Next()
-		c2 := c1.Next()
-		c3 := c2.Next()
+		c1 := nextMap[current]
+		c2 := nextMap[c1]
+		c3 := nextMap[c2]
 
-		currentVal := numbers.Value.(int)
-		targetVal := currentVal - 1
+		destination := current - 1
 
-		if targetVal == 0 {
-			targetVal = len
+		if destination == 0 {
+			destination = max
 		}
 
-		for targetVal == c1.Value.(int) || targetVal == c2.Value.(int) || targetVal == c3.Value.(int) {
-			if targetVal == 1 {
-				targetVal = len
+		for destination == c1 || destination == c2 || destination == c3 {
+			if destination == 1 {
+				destination = max
 			} else {
-				targetVal--
+				destination--
 			}
 		}
 
-		destination := numberToNode[targetVal]
+		afterc3 := nextMap[c3]
+		nextMap[c3] = nextMap[destination]
+		nextMap[destination] = c1
+		nextMap[current] = afterc3
 
-		numbers.Unlink(3)
-		destination.Link(c1)
-
-		numbers = numbers.Next()
+		current = nextMap[current]
 	}
 
-	return numberToNode[1]
+	return nextMap
 }
 
-func part1(numbers *ring.Ring) string {
-	numbers = doMoves(numbers, 100)
-	numbers = numbers.Next()
+func part1(current, max int, nextMap []int) string {
+	nextMap = doMoves(current, max, nextMap, 100)
 
+	toProcess := nextMap[1]
 	result := ""
-	for i := 0; i < numbers.Len() - 1; i++ {
-		result += fmt.Sprintf("%d", numbers.Value.(int))
-		numbers = numbers.Next()
+	for i := 0; i < max - 1; i++ {
+		result += fmt.Sprintf("%d", toProcess)
+		toProcess = nextMap[toProcess]
 	}
 
 	return result
 }
 
-func part2(numbers *ring.Ring) int {
-	numbers = doMoves(numbers, 10000000)
-	numbers = numbers.Next()
-
-	n1 := numbers.Value.(int)
-	n2 := numbers.Next().Value.(int)
-
-	return n1*n2
+func part2(current, max int, nextMap []int) int {
+	nextMap = doMoves(current, max, nextMap, 10000000)
+	return nextMap[1] * nextMap[nextMap[1]]
 }
 
+func getNextMap(cupNumbers []int) []int {
+	nextMap := make([]int, len(cupNumbers) + 1)
+	for i := range cupNumbers {
+		nextMap[cupNumbers[i]] = cupNumbers[(i + 1) % len(cupNumbers)]
+	}
+	return nextMap
+}
 
 func main() {
 	fileBytes, _ := ioutil.ReadFile("input")
 	cups := strings.Split(string(fileBytes), "")
 
-	var numbers, numbers2 *ring.Ring
+	var cupNumbers []int
+	var max int
 
-	numbers = ring.New(len(cups))
-	numbers2 = ring.New(1000000)
 	for _, cup := range cups {
 		number, _ := strconv.Atoi(cup)
-		numbers.Value = number
-		numbers = numbers.Next()
-		numbers2.Value = number
-		numbers2 = numbers2.Next()
+		cupNumbers = append(cupNumbers, number)
+
+		if number > max {
+			max = number
+		}
 	}
 
-	fmt.Printf("Part 1: %s\n", part1(numbers))
+	nextMap := getNextMap(cupNumbers)
+	fmt.Printf("Part 1: %s\n", part1(cupNumbers[0], max, nextMap))
 
-	l := numbers.Len()
-	toAdd := numbers2.Len() - numbers.Len()
-	for i := 0; i < toAdd; i++ {
-		numbers2.Value = i + l + 1
-		numbers2 = numbers2.Next()
+	for i := max + 1; i <= 1000000; i++ {
+		cupNumbers = append(cupNumbers, i)
 	}
 
-	fmt.Printf("Part 2: %d\n", part2(numbers2))
+	nextMap = getNextMap(cupNumbers)
+	fmt.Printf("Part 2: %d\n", part2(cupNumbers[0], 1000000, nextMap))
 }
