@@ -4,40 +4,25 @@ results = [
     0 6 3
 ]
 
-function parse_move(x)
-    if x == "A" || x == "X"
-        return 1
-    elseif x == "B" || x == "Y"
-        return 2
-    else
-        return 3
-    end
-end
+parse_his(x::AbstractString) = x[1] - 'A' + 1
+parse_my(x::AbstractString) = x[1] - 'X' + 1
 
 function part1(input)
     score = 0
     for (his, my) in input
-        his = parse_move(his)
-        my = parse_move(my)
+        his = parse_his(his)
+        my = parse_my(my)
         score += my + results[my, his]
     end
     println(score)
 end
 
-function parse_result(x)
-    if x == "X"
-        return 0
-    elseif x == "Y"
-        return 3
-    else
-        return 6
-    end
-end
+parse_result(x::AbstractString) = 3(x[1] - 'X')
 
 function part2(input)
     score = 0
     for (his, res) in input
-        his = parse_move(his)
+        his = parse_his(his)
         res = parse_result(res)
         my = findfirst(x -> x == res, results[:, his])
         score += my + res
