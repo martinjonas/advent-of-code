@@ -21,11 +21,8 @@ function part1(input)
 end
 
 function part2(input)
-    result = 0
-    for elves in partition(input, 3)
-        result += sum(score, mapreduce(Set, intersect, elves))
-    end
-    result
+    groups = partition(input, 3)
+    sum(group -> sum(score, mapreduce(Set, ∩, group)), groups)
 end
 
 @time input |> part1 |> println
