@@ -1,11 +1,11 @@
 int(x) = parse(Int, x)
+parse_line(line) = split(line, r"-|,") .|> int
 
 filename = (length(ARGS) == 0) ? "input" : ARGS[1]
-const input = readlines(filename)
-const parsed = map(input) do line map(int, split(line, r"-|,")) end
+const input = readlines(filename) .|> parse_line
 
-contained(l1, r1, l2, r2) = (l1 <= l2 <= r2 <= r1) || (l2 <= l1 <= r1 <= r2)
-overlap(l1, r1, l2, r2) = (l1 <= l2 <= r1) || (l2 <= l1 <= r2)
+contained(l1, r1, l2, r2) = (l1 ≤ l2 ≤ r2 ≤ r1) || (l2 ≤ l1 ≤ r1 ≤ r2)
+overlap(l1, r1, l2, r2) = (l1 ≤ l2 ≤ r1) || (l2 ≤ l1 ≤ r2)
 
-parsed .|> (x -> contained(x...)) |> sum |> println
-parsed .|> (x -> overlap(x...)) |> sum |> println
+input .|> (x -> contained(x...)) |> sum |> println
+input .|> (x -> overlap(x...)) |> sum |> println
