@@ -1,5 +1,5 @@
 filename = (length(ARGS) == 0) ? "input" : ARGS[1]
-const input = readlines(filename)
+const input = read(filename, String)
 
 function marker(line, num)
     for i in num:length(line)
@@ -9,8 +9,5 @@ function marker(line, num)
     end
 end
 
-part1(input) = sum(line -> marker(line, 4), input)
-part2(input) = sum(line -> marker(line, 14), input)
-
-input |> part1 |> println
-input |> part2 |> println
+marker(input, 4) |> println
+marker(input, 14) |> println
