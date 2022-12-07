@@ -33,12 +33,13 @@ function solve(input)
                 push!(current, parts[3])
             end
         elseif parts[1] == "\$" && parts[2] == "ls"
-            continue
+            dirs[copy(current)] = []
+            files[copy(current)] = []
         elseif parts[1] == "dir"
-            push!(get!(dirs, copy(current), []), parts[2])
+            push!(dirs[current], parts[2])
         else
             size = parse(Int, parts[1])
-            push!(get!(files, copy(current), []), size)
+            push!(files[current], size)
         end
     end
 
