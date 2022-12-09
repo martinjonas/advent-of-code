@@ -3,45 +3,30 @@ int(x) = parse(Int, x)
 filename = (length(ARGS) == 0) ? "input" : ARGS[1]
 const input = split.(readlines(filename))
 
-struct Point
-    x::Int
-    y::Int
-end
-
 function moved_tail(h, t)
-    dx = h.x - t.x
-    dy = h.y - t.y
-    if abs(dx) <= 1 && abs(dy) <= 1
+    distances = h - t
+    if maximum(abs.(distances)) <= 1
         return t
     end
 
-    Point(t.x + sign(dx), t.y + sign(dy))
+    t + sign.(distances)
 end
 
 function solve(input, ropelen)
-    rope = [Point(0,0) for _ in 1:ropelen]
+    rope = [[0,0] for _ in 1:ropelen]
+    move_to_dir = Dict("R" => [1, 0], "L" => [-1, 0],
+                       "U" => [0, 1], "D" => [0, -1])
 
     tail_positions = Set()
     push!(tail_positions, rope[ropelen])
-    for (dir, num) in input
+    for (move, num) in input
         for _ in 1:int(num)
-            dx, dy = 0, 0
-            if dir == "R"
-                dx = 1
-            elseif dir == "L"
-                dx = -1
-            elseif dir == "U"
-                dy = 1
-            elseif dir == "D"
-                dy = -1
-            else
-                @assert false
-            end
-            rope[1] = Point(rope[1].x + dx, rope[1].y + dy)
+            rope[1] = rope[1] + move_to_dir[move]
 
             for i in 2:ropelen
                 rope[i] = moved_tail(rope[i-1], rope[i])
             end
+
             push!(tail_positions, rope[ropelen])
         end
     end
