@@ -43,7 +43,7 @@ end
 
 function print_pixel((time, value))
     current_pixel = (time - 1) % 40
-    print(abs(current_pixel - value) <= 1 ? '#' : ' ')
+    print(abs(current_pixel - value) <= 1 ? '█' : ' ')
     if current_pixel == 39
         println()
     end
