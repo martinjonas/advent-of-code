@@ -34,7 +34,7 @@ end
 function part1(instructions)
     result = 0
     run(instructions) do (time, register)
-        if (time >= 20) && ((time - 20) % 40 == 0)
+        if (time % 40 == 20)
             result += time * register
         end
     end
