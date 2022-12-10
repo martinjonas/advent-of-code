@@ -21,7 +21,7 @@ function run(callback, instructions)
     time = 1
 
     for instr in instructions
-        callback((time, register))
+        callback(time, register)
 
         time += 1
 
@@ -33,7 +33,7 @@ end
 
 function part1(instructions)
     result = 0
-    run(instructions) do (time, register)
+    run(instructions) do time, register
         if (time % 40 == 20)
             result += time * register
         end
@@ -41,7 +41,7 @@ function part1(instructions)
     result
 end
 
-function print_pixel((time, value))
+function print_pixel(time, value)
     current_pixel = (time - 1) % 40
     print(abs(current_pixel - value) <= 1 ? '█' : ' ')
     if current_pixel == 39
