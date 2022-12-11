@@ -5,7 +5,7 @@ const input = read(filename, String)
 
 mutable struct Monkey
     items::Vector{Int}
-    operation::Expr
+    operation::Vector{SubString}
     test::Int
     ifTrue::Int
     ifFalse::Int
@@ -17,7 +17,7 @@ function get_monkeys(input)::Vector{Monkey}
 
     for group in groups
         starting = map(int, split(match(r"Starting items: (.+)", group).captures[1], ", "))
-        operation = Meta.parse(match(r"Operation: new = (.+)", group).captures[1])
+        operation = split(match(r"Operation: new = (.+)", group).captures[1])
         test = int(match(r"Test: divisible by (\d+)", group).captures[1])
         ifTrue = int(match(r"If true: throw to monkey (\d+)", group).captures[1])
         ifFalse = int(match(r"If false: throw to monkey (\d+)", group).captures[1])
@@ -28,7 +28,17 @@ function get_monkeys(input)::Vector{Monkey}
     monkeys
 end
 
-old = 0
+function eval_op(operation, old)
+    l = operation[1] == "old" ? old : int(operation[1])
+    r = operation[3] == "old" ? old : int(operation[3])
+    if operation[2] == "+"
+        l + r
+    elseif operation[2] == "*"
+        l * r
+    else
+        @assert false
+    end
+end
 
 function solve(monkeys::Vector{Monkey}, rounds, worryLevelReduction)
     inspected::Vector{Int} = zeros(length(monkeys))
@@ -38,8 +48,7 @@ function solve(monkeys::Vector{Monkey}, rounds, worryLevelReduction)
             while !isempty(current.items)
                 inspected[currentIndex] += 1
                 toInspect = popfirst!(current.items)
-                global old = toInspect
-                worryLevel = eval(current.operation)
+                worryLevel = eval_op(current.operation, toInspect)
                 worryLevel = worryLevelReduction(worryLevel)
 
                 target = worryLevel % current.test == 0 ? current.ifTrue : current.ifFalse
@@ -48,7 +57,6 @@ function solve(monkeys::Vector{Monkey}, rounds, worryLevelReduction)
         end
     end
 
-    @show inspected
     partialsort!(inspected, 2, rev=true)
     prod(inspected[1:2])
 end
