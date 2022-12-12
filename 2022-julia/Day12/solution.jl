@@ -2,35 +2,22 @@ int(x) = parse(Int, x)
 ci(x) = CartesianIndex(x)
 
 const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
-const input = hcat(collect.(readlines(filename))...)
 
-function height(ch)
-    if ch == 'S'
-        return 'a'
-    elseif ch == 'E'
-        return 'z'
-    end
-
-    return ch
-end
-
-function bfs(grid, starts)
+function find_shortest(grid, starts, target)
     to_process = [(start, 0) for start in starts]
     seen = Set(starts)
 
     while !isempty(to_process)
         current, dist = popfirst!(to_process)
 
-        if grid[current] == 'E'
-            return dist
-        end
+        current == target && return dist
 
         for Δ in ((0, 1), (0, -1), (1, 0), (-1, 0))
             neigh = current + ci(Δ)
 
             checkbounds(Bool, grid, neigh) || continue
             !(neigh ∈ seen) || continue
-            height(grid[neigh]) <= height(grid[current]) + 1 || continue
+            grid[neigh] <= grid[current] + 1 || continue
 
             push!(to_process, (neigh, dist+1))
             push!(seen, neigh)
@@ -40,8 +27,16 @@ function bfs(grid, starts)
     -1
 end
 
-part1(grid) = bfs(grid, [findfirst(x -> x == 'S', grid)])
-part2(grid) = bfs(grid, findall(x -> x ∈ "Sa", grid))
+const grid = hcat(collect.(readlines(filename))...)
 
-input |> part1 |> println
-input |> part2 |> println
+const S = findfirst(x -> x == 'S', grid)
+const E = findfirst(x -> x == 'E', grid)
+
+grid[S] = 'a'
+grid[E] = 'z'
+
+part1(grid) = find_shortest(grid, [S], E)
+part2(grid) = find_shortest(grid, findall(x -> x == 'a', grid), E)
+
+grid |> part1 |> println
+grid |> part2 |> println
