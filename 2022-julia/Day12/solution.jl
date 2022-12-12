@@ -34,8 +34,5 @@ const E = findfirst(x -> x == 'E', grid)
 grid[S] = 'a'
 grid[E] = 'z'
 
-part1(grid) = find_shortest(grid, [S], E)
-part2(grid) = find_shortest(grid, findall(x -> x == 'a', grid), E)
-
-grid |> part1 |> println
-grid |> part2 |> println
+println("Part 1: ", find_shortest(grid, [S], E))
+println("Part 2: ", find_shortest(grid, findall(x -> x == 'a', grid), E))
