@@ -4,11 +4,12 @@ ci(x) = CartesianIndex(x)
 const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
 
 function find_shortest(grid, starts, target)
-    to_process = [(start, 0) for start in starts]
-    seen = Set(starts)
+    queue = starts
+    distances = Dict(start => 0 for start in starts)
 
-    while !isempty(to_process)
-        current, dist = popfirst!(to_process)
+    while !isempty(queue)
+        current = popfirst!(queue)
+        dist = distances[current]
 
         current == target && return dist
 
@@ -16,15 +17,13 @@ function find_shortest(grid, starts, target)
             neigh = current + ci(Δ)
 
             checkbounds(Bool, grid, neigh) || continue
-            !(neigh ∈ seen) || continue
+            !(haskey(distances, neigh)) || continue
             grid[neigh] <= grid[current] + 1 || continue
 
-            push!(to_process, (neigh, dist+1))
-            push!(seen, neigh)
+            push!(queue, neigh)
+            distances[neigh] = dist + 1
         end
     end
-
-    -1
 end
 
 const grid = hcat(collect.(readlines(filename))...)
