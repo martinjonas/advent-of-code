@@ -57,27 +57,27 @@ end
 function part2(grid)
     maxy = maximum(y for (_, y) in grid)
 
-    sand = Set()
+    start = (500, 0)
+    sand = Set([start])
+    to_process = [start]
 
-    pos = (500, 0)
-    while true
-        x, y = pos
-        next = first(p for p in ((x,y+1), (x-1,y+1), (x+1,y+1), (x, y))
-                         if p ∉ grid && p ∉ sand && (p[2] < maxy+2))
+    while !isempty(to_process)
+        x, y = pop!(to_process)
 
-        if next != pos
-            pos = next
+        if y == maxy + 1
             continue
         end
 
-        push!(sand, pos)
-
-        if pos == (500, 0)
-            return length(sand)
+        for i ∈ -1:1
+            next = (x + i, y + 1)
+            if next ∉ grid && next ∉ sand
+                push!(sand, next)
+                push!(to_process, next)
+            end
         end
-
-        pos = (500, 0)
     end
+
+    length(sand)
 end
 
 grid = build_grid(input)
