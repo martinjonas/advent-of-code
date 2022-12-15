@@ -1,41 +1,30 @@
 int(x) = parse(Int, x)
 
 const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
-
-function parse_line(line)
-    map(int, match(r"Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)", line))
-end
-
+const line_re = r"Sensor at x=(-?\d+), y=(-?\d+): closest beacon is at x=(-?\d+), y=(-?\d+)"
+parse_line(line) = map(int, match(line_re, line))
 const input = parse_line.(readlines(filename))
 
 d(x, y, x_, y_) = abs(x - x_) + abs(y - y_)
 
-function part1(input)
-    sensordists::Array{Tuple{Int64, Int64, Int64}} = []
-    beacons = Set()
+function get_covering_sensor(input, x, y)
     for (sx, sy, bx, by) in input
-        push!(sensordists, (sx, sy, d(sx, sy, bx, by)))
-        push!(beacons, (bx, by))
+        range = d(sx, sy, bx, by)
+        if d(x, y, sx, sy) <= range
+            return (sx, sy, range, x == bx && y == by)
+        end
     end
+end
 
-    minx = minimum(x for (x, _, _) in sensordists)
-    maxx = maximum(x for (x, _, _) in sensordists)
-    maxdist = maximum(dist for (_, _, dist) in sensordists)
 
-    sensors = Set((x, y) for (x, y, _) in sensordists)
-
-    y = 2000000
+function part1(input, y)
+    minx, maxx = extrema(line[1] for line in input)
+    maxdist = maximum(d(line...) for line in input)
 
     result = 0
     for x in minx-maxdist:maxx+maxdist
-        covered = false
-        for (sx, sy, dist) in sensordists
-            if d(x, y, sx, sy) <= dist && (x, y) ∉ sensors && (x, y) ∉ beacons
-                covered = true
-            end
-        end
-
-        if covered
+        covering_sensor = get_covering_sensor(input, x, y)
+        if !isnothing(covering_sensor) && !covering_sensor[4]
             result += 1
         end
     end
@@ -43,45 +32,25 @@ function part1(input)
     result
 end
 
-function part2(input)
-    # this little typing annotation reduces the runtime from 22 s to 0.30 s
-    sensordists::Array{Tuple{Int64, Int64, Int64}} = []
-    for (sx, sy, bx, by) in input
-        dist = d(sx, sy, bx, by)
-        push!(sensordists, (sx, sy, dist))
-    end
 
-    maxx = 4000000
-    maxy = 4000000
+function part2(input)
+    maxx, maxy = 4000000, 4000000
 
     for y in 0:maxy
         x = 0
 
         while x <= maxx
-            covered = false
-
-            for (sx, sy, sensordist) in sensordists
-                curdist = d(x, y, sx, sy)
-                if curdist <= sensordist
-                    fromborder = sensordist - curdist
-                    if x < sx
-                        fromsensor = sx - x
-                        x += 2fromsensor + fromborder + 1
-                    else
-                        x += fromborder + 1
-                    end
-                    covered = true
-                    break
-                end
-            end
-
-            if !covered
+            covering_sensor = get_covering_sensor(input, x, y)
+            if isnothing(covering_sensor)
                 return 4000000x+y
             end
+
+            sx, sy, range, _ = covering_sensor
+            x = sx + (range - abs(sy - y)) + 1 # move beyond the sensor range
         end
     end
 end
 
 
-input |> part1 |> println
+part1(input, 2000000) |> println
 input |> part2 |> println
