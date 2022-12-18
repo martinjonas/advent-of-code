@@ -4,9 +4,11 @@ const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
 parse_line(l) = int.(split(l, ","))
 const input = parse_line.(readlines(filename))
 
+const directions = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]]
 
 function count_touching(cube, target)
-    sum(sum(abs.(cube2-cube)) == 1 for cube2 in target)
+    neighbors = [cube + Δ for Δ in directions]
+    sum(neighbor ∈ target for neighbor in neighbors)
 end
 
 
@@ -22,8 +24,6 @@ function part2(cubes)
     start = minpos
     q = [start]
     seen = Set(q)
-
-    directions = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]]
 
     while !isempty(q)
         current = popfirst!(q)
@@ -44,5 +44,5 @@ function part2(cubes)
 end
 
 
-input |> part1 |> println
-input |> part2 |> println
+@time input |> part1 |> println
+@time input |> part2 |> println
