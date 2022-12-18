@@ -12,7 +12,10 @@ function count_touching(cube, target)
 end
 
 
-part1(cubes) = sum(c -> 6 - count_touching(c, cubes), cubes)
+function part1(cubes)
+    cubeset = Set(cubes)
+    sum(c -> 6 - count_touching(c, cubeset), cubes)
+end
 
 
 function part2(cubes)
