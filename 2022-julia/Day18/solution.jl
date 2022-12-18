@@ -1,28 +1,23 @@
 int(x) = parse(Int, x)
+ci(x) = CartesianIndex(x...)
 
 const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
-parse_line(l) = int.(split(l, ","))
+parse_line(l) = ci(int.(split(l, ",")))
 const input = parse_line.(readlines(filename))
 
-const directions = [[0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0], [1, 0, 0], [-1, 0, 0]]
+const directions = map(ci, [(0, 0, 1), (0, 0, -1), (0, 1, 0), (0, -1, 0), (1, 0, 0), (-1, 0, 0)])
 
-function count_touching(cube, target)
-    neighbors = [cube + Δ for Δ in directions]
-    sum(neighbor ∈ target for neighbor in neighbors)
-end
-
+count_touching(cube, target) = length(target ∩ (Ref(cube) .+ directions))
 
 function part1(cubes)
     cubeset = Set(cubes)
     sum(c -> 6 - count_touching(c, cubeset), cubes)
 end
 
-
 function part2(cubes)
     cubeset = Set(cubes)
 
-    minpos = reduce((c1, c2) -> min.(c1, c2), cubes) .- 1
-    maxpos = reduce((c1, c2) -> max.(c1, c2), cubes) .+ 1
+    minpos, maxpos = extrema(cubes) .+ (CartesianIndex(-1, -1, -1), CartesianIndex(1, 1, 1))
 
     start = minpos
     q = [start]
@@ -33,8 +28,7 @@ function part2(cubes)
 
         for Δ in directions
             next = current + Δ
-
-            if next in cubeset || next in seen || any(next .< minpos) || any(next .> maxpos)
+            if next in cubeset || next in seen || next ∉ minpos:maxpos
                 continue
             end
 
