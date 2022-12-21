@@ -3,70 +3,71 @@ int(x) = parse(Int, x)
 const filename = (length(ARGS) == 0) ? "input" : ARGS[1]
 const input = readlines(filename)
 
-const opmap = Dict(
-    "+" => (a,b) -> a+b,
-    "-" => (a,b) -> a-b,
-    "*" => (a,b) -> a*b,
-    "/" => (a,b) -> a÷b
-)
+const opmap = Dict("+" => (+), "-" => (-), "*" => (*), "/" => (÷))
+
+const Var = String
 
 struct Sexpr
     op::String
-    l::Union{Int, Sexpr, String}
-    r::Union{Int, Sexpr, String}
+    l::Union{Int, Sexpr, Var}
+    r::Union{Int, Sexpr, Var}
 end
 
-
-function symeval(node, operations, into_var)
+function symeval(node, definitions, into_var)
     if node == into_var
         return node
     end
 
-    expr = operations[node]
+    expr = definitions[node]
 
     if typeof(expr) == Int
         return expr
     end
 
-    l, op, r = expr
-    lres = symeval(l, operations, into_var)
-    rres = symeval(r, operations, into_var)
+    lres = symeval(expr.l, definitions, into_var)
+    rres = symeval(expr.r, definitions, into_var)
     if typeof(lres) == Int && typeof(rres) == Int
-        return opmap[op](lres, rres)
+        return opmap[expr.op](lres, rres)
     end
 
-    return Sexpr(op, lres, rres)
+    return Sexpr(expr.op, lres, rres)
 end
 
-
-function part1(input)
-    operations = Dict()
+function parse_input(input)
+    definitions::Dict{String, Union{Int, Sexpr}} = Dict()
 
     for line in input
         result, expr = split(line, ": ")
         args = split(expr, " ")
 
         if length(args) == 1
-            operations[result] = int(only(args))
+            definitions[result] = int(only(args))
         else
-            operations[result] = args
+            l, op, r = string.(args)
+            definitions[result] = Sexpr(op, l, r)
         end
     end
 
-    symeval("root", operations, nothing)
+    definitions
 end
 
 
-function make_equal(expr, num::Int)
-    if expr == "humn"
-        return num
-    end
+function part1(definitions)
+    symeval("root", definitions, nothing)
+end
 
-    @assert typeof(expr) == Sexpr
+
+function make_equal(_::String, num::Int)
+    return num
+end
+
+function make_equal(expr::Sexpr, num::Int)
     if expr.op == "+"
         if typeof(expr.l) == Int
+            # l + r == num   --->   r == num - l
             return make_equal(expr.r, num - expr.l)
         else
+            # l + r == num   --->   l == num - r
             return make_equal(expr.l, num - expr.r)
         end
     elseif expr.op == "*"
@@ -96,23 +97,11 @@ function make_equal(expr, num::Int)
     end
 end
 
-function part2(input)
-    operations = Dict()
 
-    for line in input
-        result, expr = split(line, ": ")
-        args = split(expr, " ")
-
-        if length(args) == 1
-            operations[result] = int(only(args))
-        else
-            operations[result] = map(string, args)
-        end
-    end
-
-    arg1, _, arg2 = operations["root"]
-    res1 = symeval(arg1, operations, "humn")
-    res2 = symeval(arg2, operations, "humn")
+function part2(definitions)
+    equality = definitions["root"]
+    res1 = symeval(equality.l, definitions, "humn")
+    res2 = symeval(equality.r, definitions, "humn")
 
     if typeof(res1) == Int
         make_equal(res2, res1)
@@ -121,5 +110,7 @@ function part2(input)
     end
 end
 
-@time input |> part1 |> println
-@time input |> part2 |> println
+
+const definitions = parse_input(input)
+@time definitions |> part1 |> println
+@time definitions |> part2 |> println
