@@ -16,7 +16,7 @@ fn read_lines<T: FromStr>(filename: &str) -> Vec<T> where
 fn part1(input: &[String]) -> u32 {
     let mut res: u32 = 0;
     for line in input {
-        let digits: Vec<u32> = line.chars().filter(|c| c.is_ascii_digit()).map(|ch| ch.to_digit(10).unwrap()).collect();
+        let digits: Vec<u32> = line.chars().filter_map(|ch| ch.to_digit(10)).collect();
         res += 10*digits.first().unwrap() + digits.last().unwrap();
     }
     res
