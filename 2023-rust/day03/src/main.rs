@@ -3,6 +3,7 @@ use std::str::FromStr;
 use core::fmt::Debug;
 use std::env;
 use std::collections::{HashSet,HashMap};
+use std::iter::Iterator;
 
 fn read_lines<T: FromStr>(filename: &str) -> Vec<T> where
     <T as FromStr>::Err: Debug
@@ -12,6 +13,46 @@ fn read_lines<T: FromStr>(filename: &str) -> Vec<T> where
         .lines()
         .map(|line| line.parse::<T>().unwrap())
         .collect()
+}
+
+struct CartesianProductIterator<ItL: Iterator, ItR: Iterator+Clone> {
+    it_l: ItL,
+    it_r: ItR,
+    cur_l: Option<ItL::Item>,
+    begin_r: ItR,
+}
+
+impl<ItL: Iterator, ItR: Iterator+Clone> CartesianProductIterator<ItL, ItR> {
+    fn new(it_l: ItL, it_r: ItR) -> Self {
+        CartesianProductIterator { it_l, it_r: it_r.clone(), cur_l: None, begin_r: it_r }
+    }
+}
+
+impl<ItL: Iterator, ItR: Iterator+Clone> Iterator for CartesianProductIterator<ItL, ItR> where
+    <ItL as Iterator>::Item: Clone
+{
+    type Item = (ItL::Item, ItR::Item);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.cur_l.is_none() {
+            self.cur_l = self.it_l.next();
+            if self.cur_l.is_none() {
+                return None
+            }
+        }
+
+        match self.it_r.next() {
+            Some(r) => Some((self.cur_l.clone().unwrap(), r)),
+            None => match self.it_l.next() {
+                None => None,
+                Some(l) => {
+                    self.cur_l = Some(l);
+                    self.it_r = self.begin_r.clone();
+                    self.next()
+                }
+            }
+        }
+    }
 }
 
 struct NumberMap {
@@ -32,14 +73,14 @@ impl NumberMap {
                     .take_while(|(_col, c)| c.is_ascii_digit());
                 let (columns, digits) : (Vec<i32>, Vec<char>) = number_chars.unzip();
 
-                if columns.len() > 0 {
-                    numbers.push(digits.iter().collect::<String>().parse::<u32>().unwrap());
-
-                    let number_index = numbers.len() - 1;
-                    (columns[0]..=columns[columns.len()-1]).for_each(|c| { number_positions.insert((c, row), number_index); })
-                } else {
-                    break;
+                if columns.is_empty() {
+                    break
                 }
+
+                numbers.push(digits.iter().collect::<String>().parse::<u32>().unwrap());
+
+                let number_index = numbers.len() - 1;
+                (columns[0]..=columns[columns.len()-1]).for_each(|c| { number_positions.insert((c, row), number_index); })
             }
         }
 
@@ -65,13 +106,9 @@ fn part1(input: &[Vec<char>]) -> u32 {
 
     let mut numbers_with_neighbor = HashSet::new();
     for (col, row) in symbols {
-        for dc in [-1, 0, 1] {
-            for dr in [-1, 0, 1] {
-                if let Some(&index) = number_map.number_positions.get(&(col + dc, row + dr)) {
-                    numbers_with_neighbor.insert(index);
-                }
-            }
-        }
+        CartesianProductIterator::new([-1, 0, 1].iter(), [-1, 0, 1].iter())
+            .filter_map(|(dc, dr)|number_map.number_positions.get(&(col + dc, row + dr)))
+            .for_each(|&index| { numbers_with_neighbor.insert(index); })
     }
 
     numbers_with_neighbor.iter().map(|&i| number_map.numbers[i]).sum()
@@ -83,14 +120,10 @@ fn part2(input: &[Vec<char>]) -> u32 {
 
     let mut res = 0;
     for (c, r) in gears {
-        let mut neighbors = HashSet::new();
-        for dc in [-1, 0, 1] {
-            for dr in [-1, 0, 1] {
-                if let Some(&index) = number_map.number_positions.get(&(c + dc, r + dr)) {
-                    neighbors.insert(index);
-                }
-            }
-        }
+        let neighbors: HashSet<_> = CartesianProductIterator::new([-1, 0, 1].iter(), [-1, 0, 1].iter())
+            .filter_map(|(dc, dr)|number_map.number_positions.get(&(c + dc, r + dr)))
+            .cloned()
+            .collect();
 
         if neighbors.len() == 2 {
             res += neighbors.iter().map(|&i| number_map.numbers[i]).product::<u32>();
