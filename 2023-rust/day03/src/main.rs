@@ -106,7 +106,7 @@ fn part1(input: &[Vec<char>]) -> u32 {
 
     let mut numbers_with_neighbor = HashSet::new();
     for (col, row) in symbols {
-        CartesianProductIterator::new([-1, 0, 1].iter(), [-1, 0, 1].iter())
+        CartesianProductIterator::new(-1..=1, -1..=1)
             .filter_map(|(dc, dr)|number_map.number_positions.get(&(col + dc, row + dr)))
             .for_each(|&index| { numbers_with_neighbor.insert(index); })
     }
@@ -120,7 +120,7 @@ fn part2(input: &[Vec<char>]) -> u32 {
 
     let mut res = 0;
     for (c, r) in gears {
-        let neighbors: HashSet<_> = CartesianProductIterator::new([-1, 0, 1].iter(), [-1, 0, 1].iter())
+        let neighbors: HashSet<_> = CartesianProductIterator::new(-1..=1, -1..=1)
             .filter_map(|(dc, dr)|number_map.number_positions.get(&(c + dc, r + dr)))
             .cloned()
             .collect();
