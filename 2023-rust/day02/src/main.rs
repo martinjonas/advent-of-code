@@ -47,21 +47,21 @@ fn part2(games: &[Game]) -> u32 {
     res
 }
 
-fn parse_turn(input: &str) -> Turn {
+fn parse_turn(input: &str) -> Option<Turn> {
     let mut cubes = HashMap::new();
     for set in input.trim().split(',') {
         let mut parts = set.trim().split(' ');
-        let num = parts.next().unwrap().parse::<u32>().unwrap();
-        let name = parts.next().unwrap().to_string();
+        let num = parts.next()?.parse::<u32>()?;
+        let name = parts.next()?.to_string();
         cubes.insert(name, num);
     }
-    Turn { cubes }
+    Some(Turn { cubes })
 }
 
 
 fn parse_game(input: &str) -> Game {
     let turn_strings = input.split(':').nth(1).unwrap();
-    let turns = turn_strings.split(';').map(|s| parse_turn(s.trim())).collect();
+    let turns = turn_strings.split(';').filter_map(|s| parse_turn(s.trim())).collect();
     Game { turns }
 }
 
