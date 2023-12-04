@@ -29,17 +29,11 @@ fn parse_card (s: &str) -> Card {
 }
 
 fn part1(cards: &[Card]) -> u32 {
-    let mut res = 0;
-
-    for card in cards {
-        let count = card.have.iter().filter(|c| card.winning.contains(c)).count() as u32;
-        if count > 0 {
-            let base: u32 = 2;
-            res += base.pow(count - 1);
-        }
-    }
-
-    res
+    cards.iter()
+        .map(|card| card.have.iter().filter(|c| card.winning.contains(c)).count())
+        .filter(|&count| count > 0)
+        .map(|count| 1 << (count - 1))
+        .sum()
 }
 
 fn part2(cards: &[Card]) -> u32 {
