@@ -19,11 +19,9 @@ struct Card {
 }
 
 fn parse_card (s: &str) -> Card {
-    let data = s.split(':').nth(1).unwrap().trim();
-
-    let mut parts = data.split('|');
-    let winning: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
-    let have: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
+    let parts = s.split(':').nth(1).unwrap().trim().split('|');
+    let mut numbers = parts.map(|p| p.split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect());
+    let (Some(winning), Some(have)) = (numbers.next(), numbers.next()) else { panic!() };
 
     Card { winning, have }
 }
@@ -42,7 +40,7 @@ fn part2(cards: &[Card]) -> u32 {
     for (i, card) in cards.iter().enumerate() {
         let count = card.have.iter().filter(|c| card.winning.contains(c)).count() as u32;
         for j in 1..=count {
-          card_counts[i+j as usize] += card_counts[i];
+            card_counts[i+j as usize] += card_counts[i];
         }
     }
 
