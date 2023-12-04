@@ -13,18 +13,26 @@ fn read_lines<T: FromStr>(filename: &str) -> Vec<T> where
         .collect()
 }
 
+struct Card {
+    winning: Vec<u32>,
+    have: Vec<u32>
+}
 
-fn part1(input: &[String]) -> u32 {
+fn parse_card (s: &str) -> Card {
+    let data = s.split(':').nth(1).unwrap().trim();
+
+    let mut parts = data.split('|');
+    let winning: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
+    let have: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
+
+    Card { winning, have }
+}
+
+fn part1(cards: &[Card]) -> u32 {
     let mut res = 0;
 
-    for line in input {
-        let data = line.split(':').nth(1).unwrap().trim();
-
-        let mut parts = data.split('|');
-        let winning: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
-        let have: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
-
-        let count = have.iter().filter(|c| winning.contains(c)).count() as u32;
+    for card in cards {
+        let count = card.have.iter().filter(|c| card.winning.contains(c)).count() as u32;
         if count > 0 {
             let base: u32 = 2;
             res += base.pow(count - 1);
@@ -34,31 +42,24 @@ fn part1(input: &[String]) -> u32 {
     res
 }
 
-fn part2(input: &[String]) -> u32 {
-    let mut cards = vec![1; input.len()];
-    let mut i = 0;
+fn part2(cards: &[Card]) -> u32 {
+    let mut card_counts = vec![1; cards.len()];
 
-    for line in input {
-        let data = line.split(':').nth(1).unwrap().trim();
-
-        let mut parts = data.split('|');
-        let winning: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
-        let have: Vec<_> = parts.next().unwrap().trim().split_whitespace().map(|s| s.parse::<u32>().unwrap()).collect();
-
-        let count = have.iter().filter(|c| winning.contains(c)).count() as u32;
+    for (i, card) in cards.iter().enumerate() {
+        let count = card.have.iter().filter(|c| card.winning.contains(c)).count() as u32;
         for j in 1..=count {
-          cards[i+j as usize] += cards[i];
+          card_counts[i+j as usize] += card_counts[i];
         }
-        i += 1
     }
 
-    cards.iter().sum::<u32>()
+    card_counts.iter().sum::<u32>()
 }
 
 fn main() {
     let filename = env::args().nth(1).unwrap_or("input".to_string());
     let input = read_lines::<String>(&filename);
+    let data: Vec<Card> = input.iter().map(|l| parse_card(l)).collect();
 
-    println!("Part 1: {}", part1(&input));
-    println!("Part 2: {}", part2(&input));
+    println!("Part 1: {}", part1(&data));
+    println!("Part 2: {}", part2(&data));
 }
