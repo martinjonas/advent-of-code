@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-class Day01
+﻿class Day01
 {
 	static void Main(string[] args)
 	{
@@ -16,12 +14,12 @@ class Day01
 		g1.Sort();
 		g2.Sort();
 
-		var part1 = g1.Zip(g2, (l, r) => Int32.Abs((l - r))).Sum();
+		var part1 = g1.Zip(g2, (l, r) => Int32.Abs(l - r)).Sum();
 		Console.WriteLine(part1);
 
 		var g2counts = g2.GroupBy(n => n).ToDictionary(g => g.Key, g => g.Count());
 		var part2 = g1.Select(v1 => v1 * g2counts.GetValueOrDefault(v1, 0)).Sum();
-		Console.WriteLine(part2);
-	}
+        Console.WriteLine(part2);
+    }
 }
 
