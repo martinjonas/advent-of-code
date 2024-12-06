@@ -36,21 +36,22 @@
         var height = data.Count();
         var width = data[0].Count();
 
-        var dir = (0, -1);
+        var north = (0, -1);
+        var dir = north;
         var current = start;
-        var seen = new HashSet<((int, int), (int, int))>();
+        var seen = new HashSet<(int, int)>();
 
         while (true)
         {
-			if (seen.Contains((current, dir))) return true;
+			if (dir == north && seen.Contains(current)) return true;
 
             (int col, int row) next = Add(current, dir);
 			if (!InBounds(next, width, height)) return false;
 			
             if (data[next.row][next.col] == '#' || next == blocked)
             {
-				seen.Add((current, dir));				
-				dir = RotateRight(dir);
+                if (dir == north) seen.Add(current);
+                dir = RotateRight(dir);
             }
             else
             {
